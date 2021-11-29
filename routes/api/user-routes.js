@@ -18,7 +18,13 @@ router.get('/:id', (req, res) => {
         attributes: { exclude: ['password'] },
         where: {
             id: req.params.id
-        }
+        },
+        include: [
+            {
+                model: Post,
+                attributes: ['id', 'title', 'post_url', 'reated_at']
+            }
+        ]
     })
     .then(dbUserData => {
         if (!dbUserData) {
@@ -58,6 +64,7 @@ router.post('/login', (req, res) => {
         }
 
         const validPassword = dbUserData.checkPassword(req.body.password);
+
         if (!validPassword) {
             res.status(400).json({ message: 'Incorrect password!' });
             return;
@@ -68,16 +75,12 @@ router.post('/login', (req, res) => {
 });
 
 router.put('/:id', (req, res) => {
-    Post.update(
-        {
-            title: req.body.title
-        },
-        {
-            where: {
-                id: req.params.id
-            }
+    User.update(req.body, {
+        individualHooks: true,
+        where: {
+            id: req.params.id
         }
-    )
+    })
     .then(dbPostData => {
         if (!dbPostData) {
             res.status(404).json({ message: 'No post found with this id' });
@@ -89,26 +92,6 @@ router.put('/:id', (req, res) => {
         console.log(err);
         res.status(500).json(err);
     });
-});
-
-router.put('/:id', (req, res) => {
-    User.update(req.body, {
-        individualHooks: true,
-        where: {
-            id: req.params.id
-        }
-    })
-        .then(dbUserData => {
-            if (!dbUserData[0]) {
-                res.status(404).json({ message: 'No user found with this id' });
-                return;
-            }
-            res.json(dbUserData);
-        })
-        .catch(err => {
-            console.log(err);
-            res.status(500).json(err);
-        });
 });
 
 router.delete('/:id', (req, res) => {
